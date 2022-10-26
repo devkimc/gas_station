@@ -3,7 +3,7 @@
 declare global {
   interface Window {
     kakao: { [key: string]: any };
-    Kakao: { [key: string]: any };
+    naver: { [key: string]: any };
   }
 }
 
