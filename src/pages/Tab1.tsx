@@ -1,66 +1,105 @@
 import {
-  IonContent,
-  IonHeader,
-  IonPage,
-  IonTitle,
-  IonToolbar,
-} from "@ionic/react";
-import "./Tab1.css";
-import { useEffect } from "react";
-import carSportOutline from "../assets/car-sport.svg";
+    IonContent,
+    IonHeader,
+    IonPage,
+    IonTitle,
+    IonToolbar,
+} from '@ionic/react';
+import './Tab1.css';
+import { useState, useEffect } from 'react';
+import carSportOutline from '../assets/car-sport.svg';
+import colorFillSharp from '../assets/flash-sharp.svg';
+import axios from 'axios';
 
 const Tab1: React.FC = () => {
-  const locationUrl = window.location.href;
+    const [mapObj, setMapObj] = useState();
+    const [aaa, setaaa] = useState(0);
+    const [bbb, setbbb] = useState(0);
+    const [gasStationList, setGasStationList] = useState([]);
+    const locationUrl = window.location.href;
 
-  const initMap = (lat: number, lon: number) => {
-    const map = new window.naver.maps.Map("map", {
-      center: new window.naver.maps.LatLng(lat, lon),
-      zoom: 14,
-    });
+    const initMap = (lat: number, lon: number) => {
+        const map = new window.naver.maps.Map('map', {
+            center: new window.naver.maps.LatLng(lat, lon),
+            zoom: 13,
+        });
 
-    new window.naver.maps.Marker({
-      position: new window.naver.maps.LatLng(lat, lon),
-      map: map,
-      icon: carSportOutline,
-    });
-  };
+        setMapObj(map);
 
-  useEffect(() => {
-    setCurrentLocation();
-  }, []);
+        new window.naver.maps.Marker({
+            position: new window.naver.maps.LatLng(lat, lon),
+            map: map,
+            icon: carSportOutline,
+        });
+    };
 
-  const setCurrentLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(positionCallBack);
-      console.log("Success: 현재 위치는 가져왔습니다");
-    } else {
-      console.error("Error: 현재 위치를 가져올 수 없습니다");
-      console.log("Log: 현재 위치를 가져올 수 없습니다");
-    }
-  };
+    useEffect(() => {
+        setCurrentLocation();
+    }, []);
 
-  const positionCallBack = async (position: {
-    coords: { latitude: number; longitude: number };
-  }) => {
-    const lat = position.coords.latitude; // 위도
-    const lon = position.coords.longitude; // 경도
-    initMap(lat, lon);
-  };
+    useEffect(() => {
+        if (aaa && bbb) {
+            getGasStationList(aaa, bbb);
+        }
+    }, [mapObj]);
 
-  return (
-    <IonPage>
-      <IonHeader>
-        <IonToolbar>
-          <IonTitle>Tab 1</IonTitle>
-        </IonToolbar>
-      </IonHeader>
-      <IonContent fullscreen>
-        {locationUrl}
-        {/* <IonIcon src={carSportOutline}></IonIcon> */}
-        <div id="map" style={{ width: "100%", height: "100%" }} />
-      </IonContent>
-    </IonPage>
-  );
+    const setCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(positionCallBack);
+            console.log('Log: geolocation success');
+        } else {
+            console.error('Error: geolocation failure');
+        }
+    };
+
+    const positionCallBack = async (position: {
+        coords: { latitude: number; longitude: number };
+    }) => {
+        const lat = position.coords.latitude; // 위도
+        const lon = position.coords.longitude; // 경도
+        setaaa(lat);
+        setbbb(lon);
+        initMap(lat, lon);
+    };
+
+    const getGasStationList = (lat: number, lon: number) => {
+        const naverSearchUrl = 'https://map.naver.com/v5/api/search';
+        const gasStationQuery = '%EC%A3%BC%EC%9C%A0%EC%86%8C';
+        console.log('Log: naverSearch start');
+        axios
+            .get(
+                `${naverSearchUrl}?caller=pcweb&query=${gasStationQuery}&type=all&searchCoord=${lon};${lat}&page=1&displayCount=20&isPlaceRecommendationReplace=true&lang=ko`,
+            )
+            .then((res: any) => {
+                setGasStationList(res.data.result.place.list);
+
+                console.log('Log: naverSearch success');
+                res.data.result.place.list.forEach((gas: any) => {
+                    const newMarker = new window.naver.maps.Marker({
+                        position: new window.naver.maps.LatLng(gas.y, gas.x),
+                        map: mapObj,
+                        icon: colorFillSharp,
+                    });
+                    newMarker.setMap(mapObj);
+                });
+            })
+            .catch(() => {
+                console.log('Log: naverSearch failure');
+            });
+    };
+
+    return (
+        <IonPage>
+            <IonHeader>
+                <IonToolbar>
+                    <IonTitle>⛽ 주유소 검색</IonTitle>
+                </IonToolbar>
+            </IonHeader>
+            <IonContent fullscreen>
+                <div id="map" style={{ width: '100%', height: '100%' }} />
+            </IonContent>
+        </IonPage>
+    );
 };
 
 export default Tab1;
