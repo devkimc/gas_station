@@ -8,7 +8,6 @@ import {
 import './Tab1.css';
 import { useState, useEffect } from 'react';
 import carSportOutline from '../assets/car-sport.svg';
-import colorFillSharp from '../assets/flash-sharp.svg';
 import axios from 'axios';
 
 const Tab1: React.FC = () => {
@@ -42,6 +41,12 @@ const Tab1: React.FC = () => {
             getGasStationList(aaa, bbb);
         }
     }, [mapObj]);
+
+    useEffect(() => {
+        if (gasStationList.length >= 20) {
+            console.log('Log: gasStationList 20!');
+        }
+    }, [gasStationList]);
 
     const setCurrentLocation = () => {
         if (navigator.geolocation) {
@@ -78,7 +83,6 @@ const Tab1: React.FC = () => {
                     const newMarker = new window.naver.maps.Marker({
                         position: new window.naver.maps.LatLng(gas.y, gas.x),
                         map: mapObj,
-                        icon: colorFillSharp,
                     });
                     newMarker.setMap(mapObj);
                 });
@@ -87,6 +91,8 @@ const Tab1: React.FC = () => {
                 console.log('Log: naverSearch failure');
             });
     };
+    console.log(mapObj);
+    console.log(gasStationList.length);
 
     return (
         <IonPage>
